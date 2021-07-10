@@ -1,0 +1,114 @@
+---
+title: "week_04_notes"
+author: "Andrew Nalundasan"
+date: "7/9/2021"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(ggplot2)
+library(vtable)
+library(grid)
+library(gridExtra)
+library(lattice)
+library(janitor)
+library(GGally)
+```
+
+# Overview Video
+
++ Focus on getting good at ggplot2
+
++ Data Vizualization checklist
+
+    - URL
+    
++ pie charts
+
+    - limited value
+    - difficult to tell relative sizes of different categories
+    - works fine with only 2 categories
+    - 3 categories is still difficult to tell a good story
+    
++ tree map is a good alternative to pie chart
+
+    - instead of a pie, it's squares and blocks
+    - library(treemapify)
+    - geom_treemap()
+   
++ scales functions
+
+    - set limits of the graph
+    - bar graph: 
+        - limits = c("C", "A", "B")
+        - this makes the bars in C A B order
+
++ labels
+
+    - can use unnamed functions
+    - function(x) or \(x)
+    
++ theme
+
+    - strip 
+        - useful when using facets to label the different facets
+    - title
+    - element
+        - element text, element rectangles, element blank, etc.
+    - geometry
+        - if aesthetic is INSIDE the aesthetic function, it applies to just the one element
+        - if aesthetic is OUTSIDE the aesthetic function, it applies to the whole viz
+    - font size is determined differently between theme vs geometry
+    - theme is pretty standard how we know it
+    - geometry you must divide by .pt
+        - size = 12/.pt
+        - this gives standard 12 point font
+        - conversion is also necessary in annotate() functions
+
++ guides
+    
+    - color = 'none' to remove legends
+    
+```{r}
+# knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+# this will remove messages and warnings from R outputs. 
+```
+
+
++ annotation
+
+    - prefer annotation over legends (where possible)
+        - move the annotation closer to the data
+    - theme(legend.position) can move the legend closer to the data
+    
+    
+# Best Practices
+
+
+
+# Clutter is your enemy
+
+# Gestalt principles
+
+# Visual order, part 1
+
+# Visual order, part 2
+
+# Focusing audience attention
+
+# Titles, labels, and legends
+
+# Color
+
+# Shape, line style, and size
+
+# Annotations
