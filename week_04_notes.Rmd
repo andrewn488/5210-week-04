@@ -93,22 +93,961 @@ library(GGally)
     
 # Best Practices
 
++ Principles are straightforward but application is often missed 
 
+    - most time spent on analysis
+    - need time to spend on communication
+    
++ Keep it simple
+
+    - 1 main point
+    - maybe 1-2 sub-points
+    
++ Use the appropriate graph
+
+    - time-series or continuation needs a line graph rather than bar graph
+    
++ Explanatory visuals have appropriate titles and labels
+
+    - expert graph readers look at: 
+        - title > axes > data
+    - novice graph readers are all over the place
+        - tell these people what they need to see
+    - 5 or less variables is best, 8 variables max
+        
+        
++ Be intentional with colors
+
++ Make data readable
+
+    - axes and labels must be readable
+    
++ Double check your numbers
+
++ Bad visualizations come from 3 sources
+
+    - Aesthetic
+        - inconsistent, ugly, random
+    - Substantive
+        - the data is bad
+        - ensure you're graphing the right data
+    - Perceptual
+        - confusing or misleading
+        - difficult for audience to see/process what they're looking at
+        
+## Keep it Simple
+
++ What's the point of the graph?
+
+    - Remove clutter
+    - Ensure proper axis labels
+    
++ Use the appropriate graph
+
+    - Line graph: shows CONTINUATION, shows MOTION
+    - Bar graph: shows quantities and no continuation
+        - Make certain origin is at 0
+    - Pie charts: the eye cannot determine the size of angular shapes
+        - 2 variables is the best for pie chart to determine similarity or differences
+        - Show name and % on each slice
+    - Always better to not have a legend
+    
++ Appropriate titles and labels
+
+    - Graph title indicates the main point trying to make
+    - Titles and labels gets audience to focus attention where you want
+    - Ensure scale is uniform
+    - Flip coordinates before making your audience turn their heads to read labels
+    
++ Be careful with colors
+
+    - Humans can only distinguis 8 colors at a time
+        - 5 colors max is best practice
+    
++ Make data readable
+
+    - 3D is a bad idea
+    - Be intentional with scale
+        - "This vs. everything else"
+        
++ Typography / Iconography
+
+    - Font can communicate meaning
+    - Floppy Disk <- save
+    
 
 # Clutter is your enemy
 
++ Make graphs look more professional
+
++ None of the analysis or modeling matters if it is not communicated well
+
++ Often, people leave little time to build the communication and visuals
+
+## Cognitive overload and clutter
+
++ Don't try to do too much. Do less. 
+
++ Goal: Make life easy for the reader
+
+    - Do the work for your audience
+    - Make your work easy to understand
+    - Know what message you are trying to communicate
+    - Remove your clutter
+
++ Written examples:
+  
+    - Bullet format is easier to process
+         - "To the point"
+
++ Clutter:
+
+    - Extra visual elements that take up space but don't increase understanding
+    - "I didn't have time to write a short letter, so I wrote a long one instead."
+    - Maximize the signal-to-noise ratio
+        - aka "ink ratio"
+        - make you audience able to FOCUS on the message
+    - No cognitive overloade; reduce the clutter
+    
+
 # Gestalt principles
+
++ Reducing clutter <- grouping information naturally
+
+    - Ability to maintain meaningful perceptions
+    - How people perceive order
+    
++ Gestalt Principles
+
+    - Similarity - items that look the same belong together
+    - Proximity - items closer together belong together
+    - Enclosure - items enclosed together are part of a group
+    - Closure - people perceive parts as part of a whole
+        - people group things naturally
+        - borders usually unnecessary
+        - gridlines usually unnecessary
+    - Continuity - people look for the smootheset path
+        - people expect things to be continuous
+    - Connection - people think of items that are connected as part of a group
+    
++ Using Gestalt principles
+
+    - Declutter visuals because of people's natural abilities
+    - Decluttering is an art; data viz is an art
+
 
 # Visual order, part 1
 
++ Helps people understand your main point
+
+    - If graph has order, people will follow naturally what you're trying to say
+    
+    
+## Orientation
+
++ Sometimes easier to read a graph with flipped axes
+
+    - ggplot's default organizes alphabetically
+    
+```{r}
+# load data
+dis <- read_csv("Disability.csv")
+
+# Recode date to age range, this is to fix an Excel formatting problem
+dis <- dis %>% 
+  mutate(age_group = recode(age_group, '12-Jun' = "6-12"))
+```
+    
+    
+```{r}
+# Default graphic of median expenditures by ethnicity
+dis %>% 
+  group_by(ethnicity) %>% 
+  summarize(med_exp = median(expenditures)) %>% 
+  ggplot(mapping = aes(x = ethnicity, y = med_exp)) + 
+  geom_bar(stat = "identity")
+```
+
+
+```{r}
+# change orientation
+dis %>% 
+  group_by(ethnicity) %>% 
+  summarize(med_exp = median(expenditures)) %>% 
+  ggplot(mapping = aes(x = ethnicity, y = med_exp)) + 
+  geom_bar(stat = "identity") + 
+  coord_flip()
+
+```
+
+
+### Reorder by numeric variable
+
++ Order bars by median expenditures rather than alphabetically
+
+```{r}
+# Order bars by median expenditures
+dis %>% 
+  group_by(ethnicity) %>% 
+  summarize(med_exp = median(expenditures)) %>% 
+  ggplot(mapping = aes(x = reorder(ethnicity, med_exp), y = med_exp)) + 
+  geom_bar(stat = "identity") + 
+  coord_flip()
+```
+
++ We can reorder factor variables based on any quantitative variable in this manner
+
+### Reorder by *other* numeric variable
+
+```{r}
+# Order bars on count while graphing median expenditures
+dis %>% 
+  group_by(ethnicity) %>% 
+  summarize(med_exp = median(expenditures),
+            n_eth = n()) %>% 
+  ggplot(mapping = aes(x = reorder(ethnicity, n_eth), y = med_exp)) + 
+  geom_bar(stat = "identity") + 
+  coord_flip()
+```
+
++ Order by count if the need arises
+
+### Reorder by factor levels
+
++ reorder the facor using "fct_relevel()" within "mutate()"
+
+```{r}
+# Order factor level with order vector
+ord <- c("Other", "White", "American Indian", "Native Hawaiian", "Multi-Race", "Asian", "Hispanic", "Black")
+
+dis %>%
+  mutate(ethnicity = fct_relevel(ethnicity, levels = rev(ord))) %>%   # "rev" makes the list go from top down. default starts at origin
+  group_by(ethnicity) %>% 
+  summarize(med_exp = median(expenditures)) %>% 
+  ggplot(mapping = aes(x = ethnicity, y = med_exp)) + 
+  geom_bar(stat = "identity") + 
+  coord_flip()
+```
+
+
+### Reorder bars within clusters
+
+```{r}
+# Order clusters by median expenditure and include gender
+dis %>% 
+  group_by(ethnicity, gender) %>% 
+  summarize(med_exp = median(expenditures)) %>% 
+  ggplot(mapping = aes(x = reorder(ethnicity, med_exp), y = med_exp, fill = gender)) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  coord_flip()
+```
+
+```{r}
+# Order clusters and bars by median expenditure and include gender
+dis %>% 
+  group_by(ethnicity, gender) %>% 
+  summarize(med_exp = median(expenditures)) %>% 
+  ggplot(mapping = aes(x = reorder(ethnicity, med_exp), y = med_exp, fill = reorder(gender, med_exp))) +  # set fill to reorder.
+  geom_bar(stat = "identity", position = "dodge") + 
+  coord_flip()
+```
+
+### Reorder the legend
+
++ be visually consistent by reordering the legend
+
+```{r}
+# Order factor legend within code chunk without using order vector
+dis %>% 
+  group_by(ethnicity, gender) %>% 
+  summarize(med_exp = median(expenditures)) %>% 
+  ggplot(mapping = aes(x = reorder(ethnicity, med_exp), y = med_exp, fill = reorder(gender, med_exp))) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  coord_flip() + 
+  scale_fill_discrete(limits = c("Female", "Male"))
+```
+
+### Visual Order
+
++ Order legend by continuous variable rather than discrete variable
+
++ Know WHAT you want to do, THEN figure out HOW to do it in the software
+
+
 # Visual order, part 2
+
++ Visual order relative to: 
+
+    - Left alignment is better than being centered
+        - Titles
+        - Text
+    - Diagonal components should be avoided
+        - Diagonal lines are distracting
+        - Diagonal text is hard to read
+    - Stragic use of contracts
+        - Make important bars stand out
+        - Be intentional with color
+        - Don't be too dramatic
+    - White space
+        - Avoid filling the entire graph area
+        - Removal of lines create white space
+        - Use contrast or location of text to remove the need for arrow-lines
+        
+### Themes
+
+```{r}
+# Theme classic removes gray lines in background
+dis %>% 
+  group_by(ethnicity, gender) %>% 
+  summarize(med_exp = median(expenditures)) %>% 
+  ggplot(mapping = aes(x = reorder(ethnicity, med_exp), y = med_exp, fill = reorder(gender, med_exp))) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  coord_flip() + 
+  scale_fill_discrete(limits = c("Female", "Male")) + 
+  theme_classic()
+```
+
+### Remove tick marks
+
+```{r}
+# Remove lines and tick marks to reduce clutter
+dis %>% 
+  group_by(ethnicity, gender) %>% 
+  summarize(med_exp = median(expenditures)) %>% 
+  ggplot(mapping = aes(x = reorder(ethnicity, med_exp), y = med_exp, fill = reorder(gender, med_exp))) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  coord_flip() + 
+  scale_fill_discrete(limits = c("Female", "Male")) + 
+  theme_classic() + 
+  theme(axis.line.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.ticks.x = element_blank())
+```
+
+### ggthemes
+
+```{r}
+# load library
+library(ggthemes)
+
+# Apply Wall Street Journal theme
+# Order factor legend within code chunk without using order vector
+dis %>% 
+  group_by(ethnicity, gender) %>% 
+  summarize(med_exp = median(expenditures)) %>% 
+  ggplot(mapping = aes(x = reorder(ethnicity, med_exp), y = med_exp, fill = reorder(gender, med_exp))) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  coord_flip() + 
+  scale_fill_discrete(limits = c("Female", "Male")) + 
+  theme_wsj()
+```
+
++ Theme function has heaps of settings
+
+### Creating custom themes
+
++ start with theme_classic() and add changes
+
+```{r}
+# Start with theme_classic() and modify a few things
+mytheme <- theme_classic() + 
+  theme(text = element_text(colour = "red"), 
+        axis.title = element_text(size = rel(1.25)), 
+                                  plot.background = element_rect(fill = "light blue"))
+```
+
+```{r}
+# The base graph we have been using plus mytheme
+dis %>% 
+  group_by(ethnicity, gender) %>% 
+  summarize(med_exp = median(expenditures)) %>% 
+  ggplot(mapping = aes(x = reorder(ethnicity, med_exp), y = med_exp, fill = reorder(gender, med_exp))) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  coord_flip() + 
+  scale_fill_discrete(limits = c("Female", "Male")) + 
+  mytheme
+```
+
++ Themes are powerful
+
+    1. Reduce clutter
+        - Highlight the points you want to highlight
+    2. Customize plots
+    3. Save time by applying custom theme and reuse it
 
 # Focusing audience attention
 
++ Ensure your audience see what you want them to see
+
++ EDA is all about finding the important message
+    
+    - Need to invest time and effort to COMMUNICATE the important finding
+    - Make it easy for the audience to follow along
+    
++ What is the goal, what's your plan, what are you trying to communicate?
+
+    - Consider what your audience will see and remember
+    - Preattentive Attributes!!
+    
++ Preattentive Attributes
+  
+    - Use these to direct your audiences attention
+    - Use to build a visual hierarchy to lead your audience through the information
+
++ Take a stand and show what's important
+
+    - Text: color and bold are most effective
+        - *Italics* and underline are not very effective
+    - Title needs to stand out. This is the main idea of the visual!
+    - Be intentional with color
+        - Emphasize what's important
+        - De-emphasize what's less important
+    - Size/shape
+    - Annotations
+        - Enclosures to make things standout
+        - Text
+      
+
 # Titles, labels, and legends
+
++ Informative text used to describe the visual
+
++ Don't let the title repeat the axes
+
+    - Think of set of labels as a WHOLE for the visual
+    
+## Best Practices    
+
++ Title and Subtitle: indicate the main/sub points you want the audience to see in the visual
+    
+    - Always set while graphing
+    - Avoid long titles, be concise
+    
++ Axes and legend labels: variable and units (if applicable)
+
+    - Often taken from the data, but you can format factor level names or digits while wrangling or graphing
+    
++ Tick and legend labels: factor level or quantity
+
+    - Format appropriately (no scientific notation, %, $, ",", etc)
+    - Often taken directly from the data, but you can format factor level names or digits in the data or while wrangling
+    
++ Reference labels: additional labels that could include a figure number or source
+
+## Primary titles and labels
+
+```{r}
+# The base graph we have been redesigning plus labels
+dis %>% 
+  group_by(ethnicity, gender) %>% 
+  summarize(med_exp = median(expenditures)) %>% 
+  ggplot(mapping = aes(x = reorder(ethnicity, med_exp), y = med_exp, fill = reorder(gender, med_exp))) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  coord_flip() + 
+  scale_fill_discrete(limits = c("Female", "Male")) + 
+  theme_classic() + 
+  labs(title = "Main title\nmain title continued",
+       subtitle = "Subtitle", 
+       fill = "Legend\ntitle",
+       x = "New x-axis label", 
+       y = "New y-axis label", 
+       tag = "Tag",     # would likely be a figure number or something else
+       caption = "Caption")    # would likely be a source or reference
+```
+
+```{r}
+# Remake of overall graph
+p <- dis %>% 
+  filter(ethnicity %in% c("Asian", "Black", "Hispanic", "White")) %>% 
+  group_by(ethnicity, gender) %>% 
+  summarize(med_exp = median(expenditures)) %>% 
+  ggplot(mapping = aes(x = reorder(ethnicity, med_exp), y = med_exp, fill = gender)) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  coord_flip() + 
+  scale_fill_discrete(limits = c("Male", "Female")) + 
+  theme_classic() + 
+  labs(title = "There is a wide variation of expenditures by ethnicity, but not by gender",
+       subtitle = "The difference by gender for White and black is deceiving\ndue to differences in age profiles and associated expenditures (see discussion)", 
+       fill = "",
+       x = "", 
+       y = "Median expenditures", 
+       tag = "",     # would likely be a figure number or something else
+       caption = "\nSource: Disability.csv data set from Week 1")    # would likely be a source or reference
+
+p
+```
+
+## Tick labels and marks
+
+```{r}
+# Change the axis ticks and labels
+p <- p + 
+  theme(axis.ticks.y = element_blank(), 
+        axis.line.y = element_blank(),
+        axis.ticks.x = element_blank()) + 
+  scale_y_continuous(breaks = seq(0, 30000, 5000))   # run it from 0 --> 30000, with breaks every 5000
+
+p
+```
+
+```{r}
+# use scales to format numbers
+library(scales)
+p <- p + scale_y_continuous(breaks = seq(0, 30000, 5000), 
+                            labels = dollar)
+
+p
+```
+
+```{r}
+# Legend location and labels
+p <- p + theme(legend.position = "bottom") +
+         scale_fill_manual(labels = c("Women", "Men"), values = c("#F8766D", "#00BFC4")) 
+
+# specify the fill values, these are color codes that are the original colors to add manually
+# custom labels and color for "fill = gender" was specified in aes()
+# set custom axes breaks and labels for "y = med_exp" that was specified in aes()
+p
+```
+
++ Only spend the time and effort if it helps clarify your message and helps get the point across
+
++ Budget time in the project to work on your visuals!!
 
 # Color
 
++ Color can help make something stand out or confusing your audience
+
+```{r}
+# load libraries
+library(colorspace)
+
+# Plot reset color palettes
+hcl_palettes(plot = TRUE)
+
+```
+
+```{r}
+# Basic bar graph
+dis %>% 
+  filter(ethnicity %in% c("Asian", "Black", "Hispanic", "White")) %>% 
+  ggplot(mapping = aes(x = ethnicity)) + 
+  geom_bar() + 
+  coord_flip() + 
+  theme_classic()
+```
+
+```{r}
+# Something other than black is easier on the eyes
+dis %>% 
+  filter(ethnicity %in% c("Asian", "Black", "Hispanic", "White")) %>% 
+  ggplot(mapping = aes(x = ethnicity)) +   # put fill = in aes() to color code the factor variables
+  geom_bar(fill = "light blue") +   # color in the geom to change color of fill
+  coord_flip() + 
+  theme_classic()
+```
+
+```{r}
+# Scatter plot
+dis %>% 
+  ggplot(mapping = aes(x = age, y = expenditures)) +   
+  geom_point() +  
+  theme_classic()
+```
+
+```{r}
+# Scatter plot with color
+dis %>% 
+  ggplot(mapping = aes(x = age, y = expenditures)) +   
+  geom_point(color = "light blue") +  
+  theme_classic()
+```
+
+```{r}
+# QUALITATIVE SCALE FILL
+# Decorational color schemes
+# Don't draw attention away from main points
+dis %>% 
+  filter(ethnicity %in% c("Asian", "Black", "Hispanic", "White")) %>% 
+  ggplot(mapping = aes(x = ethnicity, fill = ethnicity)) + 
+  geom_bar() + 
+  coord_flip() + 
+  theme_classic() + 
+  scale_fill_discrete_qualitative(guide = "none")    # this is from colorspace()
+
+# guide = FALSE is because there's no need for a legend since they're already labeled on the axes
+
+```
+
++ Don't let color distract from main points
+
+```{r}
+# SEQUENTIAL SCALE FILL
+dis %>% 
+  filter(ethnicity %in% c("Asian", "Black", "Hispanic", "White")) %>% 
+  ggplot(mapping = aes(x = ethnicity, fill = ethnicity)) + 
+  geom_bar() + 
+  coord_flip() + 
+  theme_classic() + 
+  scale_fill_discrete_sequential(guide = "none")
+  
+```
+
+```{r}
+# different geoms
+dis %>% 
+  ggplot(mapping = aes(x = age, y = expenditures, color = ethnicity)) + 
+  geom_point() + 
+  theme_classic() + 
+  scale_color_discrete_sequential()
+
+```
+
+```{r}
+# line
+dis %>% 
+  filter(ethnicity %in% c("Asian", "Black", "Hispanic", "White")) %>% 
+  group_by(age, ethnicity) %>% 
+  summarize(med_exp = median(expenditures)) %>% 
+  ggplot(mapping = aes(x = age, y = med_exp, color = ethnicity)) + 
+  geom_smooth(se = FALSE) + 
+  theme_classic() + 
+  scale_color_discrete_sequential()
+```
+
+Draw attention - make one or a set of elements stand out
+
+```{r}
+dis %>% 
+  filter(ethnicity %in% c("Asian", "Black", "Hispanic", "White")) %>% 
+  ggplot(mapping = aes(x = ethnicity, fill = ethnicity)) + 
+  geom_bar() + 
+  coord_flip() + 
+  theme_classic() + 
+  scale_fill_manual(values = c("gray", "gray", "gray", "red", "gray", "gray", "gray", "gray"), guide = "none")    # guide = "none" means no legend 
+```
+
++ "fill = interaction(ethnicity, gender)" to make comparisons
+
+    - allows using "fill" with multiple variables
+    
+## Qualitative
+
++ no individual value should stand out
+
+```{r}
+dis %>% 
+  filter(ethnicity %in% c("Asian", "Black", "Hispanic", "White")) %>% 
+  ggplot(mapping = aes(x = ethnicity, fill = gender)) + 
+  geom_bar(position = "dodge") + 
+  coord_flip() + 
+  theme_classic() + 
+  scale_fill_discrete_qualitative(palette = "Dark 2")    # palette came from colorspace library
+```
+
+
+## Sequential
+
++ goal is to create order
+
++ use "reorder()" as necessary
+
++ easy on the eyes and uncluttered
+
+```{r}
+dis %>% 
+  filter(ethnicity %in% c("Asian", "Black", "Hispanic", "White")) %>% 
+  group_by(ethnicity) %>% 
+  summarise(count_n = n()) %>% 
+  ggplot(mapping = aes(x = reorder(ethnicity, count_n), y = count_n, fill = ethnicity)) + 
+           geom_bar(stat = "identity") +
+  coord_flip() + 
+  theme_classic() + 
+  scale_fill_discrete_sequential(palette = "Purples 2", guide = "none")
+```
+
+## Divergence
+```{r}
+# Diverging color scheme with bar graph
+dis %>% 
+  filter(ethnicity %in% c("Asian", "Black", "Hispanic", "White")) %>% 
+  ggplot(mapping = aes(x = ethnicity, fill = ethnicity)) +
+  geom_bar() +
+  coord_flip() +
+  theme_classic() +
+  scale_fill_discrete_diverging(palette = "Blue-Red 2", guide = "none")
+```
+
+```{r}
+# Diverging color scheme with scatter plot
+dis %>% 
+  ggplot(mapping = aes(x = age, y = expenditures, color = age_group)) +
+  geom_point() +
+  theme_classic() +
+  scale_color_discrete_diverging(palette = "Green-Orange", guide = "none")
+```
+
+
 # Shape, line style, and size
 
++ Size and shape typically used in scatter plots
+
+    - Typically difficult to detect
+    
++ Line Types typically used in line graphs
+
++ Size typically used on quantitative variables
+
++ Shape and linetype typically used on factor variables
+
++ Use size and shape sparingly and intentionally
+
+## Shape
+
+```{r}
+# Basic scatter plot with base shape points
+
+dis %>% 
+  filter(ethnicity %in% c("Asian", "Black", "Hispanic", "White")) %>% 
+  ggplot(mapping = aes(x = age, y = expenditures, shape = ethnicity)) + 
+  geom_point() + 
+  theme_classic()
+```
+
++ Difficult to see what's going on
+
+```{r}
+# Show a list of available shapes
+data.frame(shape = 0:24) %>% 
+  ggplot(mapping = aes(0, 0, shape = shape)) +
+  geom_point(aes(shape = shape), size = 5, fill = "red") +
+  scale_shape_identity() +
+  facet_wrap( ~ shape) +
+  theme_void()
+```
+
+
+```{r}
+# Basic scatter plot with different shape points and base size
+dis %>% 
+  filter(ethnicity %in% c("Asian", "Black", "Hispanic", "White")) %>% 
+  ggplot(mapping = aes(x = age, y = expenditures, shape = ethnicity)) + 
+  geom_point() + 
+  theme_classic() + 
+  scale_shape_manual(values = c(0, 4, 16, 3))   # set custom points
+```
+
+## Size
+
++ To se the base size of points, set size = #
+
+```{r}
+# Scatter plot with different shapes but larger size
+
+dis %>% 
+  filter(ethnicity %in% c("Asian", "Black", "Hispanic", "White")) %>% 
+  ggplot(mapping = aes(x = age, y = expenditures, shape = ethnicity)) + 
+  geom_point(size = 3) + 
+  theme_classic()
+```
+
++ To distinguish different data set size in the aes() function
+
+```{r}
+# Set size by magnitude of data
+dis %>% 
+  filter(ethnicity %in% c("Asian", "Black", "Hispanic", "White")) %>% 
+  ggplot(mapping = aes(x = age, y = expenditures, size = expenditures)) + 
+  geom_point() + 
+  theme_classic()
+```
+
++ Can't really tell the difference between the sizes
+
+## Shape and Size
+
++ If you use too many different things together, you'll end up with multiple legends
+
+```{r}
+# Basic scatter plot with different size and shape points
+dis %>% 
+  filter(ethnicity %in% c("Asian", "Black", "Hispanic", "White")) %>% 
+  ggplot(mapping = aes(x = age, y = expenditures, shape = ethnicity, size = factor(ethnicity))) +
+  geom_point() +
+  theme_classic() 
+```
+
+## Custom shape and size to get 1 legend
+
+```{r}
+# Basic scatter plot with different shape points
+dis %>% 
+  filter(ethnicity %in% c("Asian", "Black", "Hispanic", "White")) %>% 
+  ggplot(mapping = aes(x = age, y = expenditures, shape = ethnicity, size = factor(ethnicity))) +
+  geom_point() +
+  theme_classic() +
+  scale_size_manual("", values = c(4, 2, 3, 1)) +
+  scale_shape_manual("", values = c(0, 4, 16, 3))
+```
+
++ When using multiple attributes, use manual to combine multiple legends into 1
+
+```{r}
+# Basic scatter plot with different shape and color points
+dis %>% 
+  ggplot(mapping = aes(x = age, y = expenditures, shape = ethnicity, color = ethnicity)) +
+  geom_point() +
+  theme_classic()
+```
+
+
+```{r}
+# Basic scatter plot with base shape and larger size points
+dis %>%   
+  ggplot(mapping = aes(x = age, y = expenditures, shape = ethnicity)) +
+  geom_point(size = 2) +
+  theme_classic()
+```
+
+## Linetypes
+
++ avoid spaghetti graphs
+
++ it can be difficult to decifer the base linetypes in ggplot
+
+```{r}
+# Create random dates for making line graphs
+dis$date <- sample(seq(as.Date("2015/01/01"), as.Date("2018/01/01"), by = "month"), nrow(dis), replace = TRUE)
+```
+
+```{r}
+dis %>% 
+  filter(ethnicity %in% c("Asian", "Black", "Hispanic", "White")) %>% 
+  group_by(date, ethnicity) %>% 
+  summarize(med_exp = median(expenditures)) %>% 
+  ggplot(mapping = aes(x = date, y = med_exp, linetype = ethnicity)) +
+  geom_line() +
+  theme_classic()
+```
+
+
+Custom Linetypes
+```{r}
+# Show a list of available linetypes
+data.frame(linetype = factor(1:13)) %>% 
+  ggplot(mapping = aes(0, 0, linetype = linetype)) +
+  geom_segment(mapping = aes(x = 0, xend = 1, y = linetype, yend = linetype, linetype = linetype), size = 1.1)+
+  scale_x_continuous(limits = c(0, 1), breaks = NULL, name = "") +
+  scale_y_discrete(name = "") +
+  guides(linetype = guide_legend(reverse = TRUE)) +
+  theme_void()
+```
+
+
+Improving readability with linetypes
+
+```{r}
+# Custom linetypes
+dis %>% 
+  filter(ethnicity %in% c("Asian", "Black", "Hispanic", "White")) %>% 
+  group_by(date, ethnicity) %>% 
+  summarize(med_exp = median(expenditures)) %>% 
+  ggplot(mapping = aes(x = date, y = med_exp, linetype = ethnicity, size = ethnicity)) +
+  geom_line() +
+  theme_classic() +
+  scale_linetype_manual(values = c(1, 3, 6, 10)) +
+  scale_size_manual(values = c(0.5, 1, 1.25, 1))
+```
+
+Use facets to show multiple line graphs
+
+```{r}
+# Using facets
+dis %>% 
+  filter(ethnicity %in% c("Asian", "Black", "Hispanic", "White")) %>% 
+  group_by(date, ethnicity) %>% 
+  summarize(med_exp = median(expenditures)) %>% 
+  ggplot(mapping = aes(x = date, y = med_exp, linetype = ethnicity)) +
+  geom_line() +
+  theme_bw() +
+  facet_wrap(~ ethnicity) +
+  scale_linetype_discrete(guide = "none")
+```
+
+
 # Annotations
+
++ Trying to make a point on the visual to stand out
+
+    - Communicate the key findings from your analysis
+    
++ Easy to over kill with annotations
+
+    - Don't obscure the point!
+    
+```{r}
+# Base graph to start with
+g_ann <- dis %>% 
+  filter(ethnicity %in% c("Asian", "Black", "Hispanic", "White")) %>% 
+  group_by(ethnicity, gender) %>% 
+  summarize(med_exp = median(expenditures)) %>% 
+  ggplot(mapping = aes(x = reorder(ethnicity, med_exp), y = med_exp, fill = gender)) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  coord_flip() + 
+  scale_fill_discrete(limits = c("Male", "Female")) + 
+  theme_classic()
+
+g_ann
+```
+
+## Annotation as context
+
+```{r}
+# Annotation as context
+# Showing how much median expenditures of each element is vs. the median
+
+g_ann + 
+  geom_hline(yintercept = median(dis$expenditures)) +
+  annotate(geom = "text", x = "Hispanic", 
+           y = 200 + median(dis$expenditures),
+           label = "Median expenditures", hjust = 0)
+
+```
+
+
+```{r}
+# Shading to highlight a finding
+g_ann + 
+  annotate(geom = "rect", xmin = 3.5, xmax = 4.5,
+           ymin = -200, ymax = 200 + median(dis$expenditures[dis$ethnicity == "White" & dis$gender == "Male"]),
+           fill = "lightblue", alpha = 0.5) +
+  annotate(geom = "rect", xmin = 1.5, xmax = 2.5,
+           ymin = -200, ymax = 200 + median(dis$expenditures[dis$ethnicity == "Black" & dis$gender == "Male"]),
+           fill = "lightblue", alpha = 0.5) 
+
+```
+
+```{r}
+# Create random dates for making line graphs
+set.seed(123)
+dis$date <- sample(seq(as.Date("2015/01/01"), as.Date("2018/01/01"), by = "month"), nrow(dis), replace = TRUE)
+```
+
+
+```{r}
+# Shading of time series
+# Look at median expenditures over time 
+dis %>% 
+  group_by(date) %>% 
+  summarize(med_exp = median(expenditures)) %>% 
+  ggplot(mapping = aes(x = date, y = med_exp)) + 
+  geom_line() +
+  annotate(geom = "rect", xmin = as.Date("2015-05-15"), 
+           xmax = as.Date("2015-08-15"), 
+           ymin = 3000, ymax = 33000, 
+           fill = "lightblue", alpha = 0.5) +
+  theme_classic()
+```
+
++ Use annotations to set the context to highlight the finding within the bigger picture
+
